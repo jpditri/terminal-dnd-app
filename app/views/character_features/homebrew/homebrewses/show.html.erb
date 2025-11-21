@@ -1,0 +1,8 @@
+<h1><%= @character_features::homebrew::homebrews.name %></h1>
+
+<%= render @character_features::homebrew::homebrews %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_character_features::homebrew::homebrews_path(@character_features::homebrew::homebrews) %>
+  <%= link_to 'Back', character_features::homebrew::homebrewses_path %>
+</div>

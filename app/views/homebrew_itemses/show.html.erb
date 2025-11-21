@@ -1,0 +1,8 @@
+<h1><%= @homebrew_items.name %></h1>
+
+<%= render @homebrew_items %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_homebrew_items_path(@homebrew_items) %>
+  <%= link_to 'Back', homebrew_itemses_path %>
+</div>

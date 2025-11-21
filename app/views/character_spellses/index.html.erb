@@ -1,0 +1,9 @@
+<h1>Character Spellses</h1>
+
+<div id="character_spellses">
+  <% @character_spellses.each do |character_spells| %>
+    <%= render character_spells %>
+  <% end %>
+</div>
+
+<%= link_to 'New Character Spells', new_character_spells_path %>

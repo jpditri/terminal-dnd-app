@@ -1,0 +1,9 @@
+<h1>Plot Hookses</h1>
+
+<div id="plot_hookses">
+  <% @plot_hookses.each do |plot_hooks| %>
+    <%= render plot_hooks %>
+  <% end %>
+</div>
+
+<%= link_to 'New Plot Hooks', new_plot_hooks_path %>

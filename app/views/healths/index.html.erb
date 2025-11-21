@@ -1,0 +1,9 @@
+<h1>Healths</h1>
+
+<div id="healths">
+  <% @healths.each do |health| %>
+    <%= render health %>
+  <% end %>
+</div>
+
+<%= link_to 'New Health', new_health_path %>

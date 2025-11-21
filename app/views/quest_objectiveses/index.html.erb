@@ -1,0 +1,9 @@
+<h1>Quest Objectiveses</h1>
+
+<div id="quest_objectiveses">
+  <% @quest_objectiveses.each do |quest_objectives| %>
+    <%= render quest_objectives %>
+  <% end %>
+</div>
+
+<%= link_to 'New Quest Objectives', new_quest_objectives_path %>

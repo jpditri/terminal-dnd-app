@@ -1,0 +1,9 @@
+<h1>Campaignses</h1>
+
+<div id="campaignses">
+  <% @campaignses.each do |campaigns| %>
+    <%= render campaigns %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaigns', new_campaigns_path %>

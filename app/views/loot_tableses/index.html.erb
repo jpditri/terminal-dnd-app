@@ -1,0 +1,9 @@
+<h1>Loot Tableses</h1>
+
+<div id="loot_tableses">
+  <% @loot_tableses.each do |loot_tables| %>
+    <%= render loot_tables %>
+  <% end %>
+</div>
+
+<%= link_to 'New Loot Tables', new_loot_tables_path %>

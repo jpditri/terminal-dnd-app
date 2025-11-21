@@ -1,0 +1,9 @@
+<h1>Adventure Templateses</h1>
+
+<div id="adventure_templateses">
+  <% @adventure_templateses.each do |adventure_templates| %>
+    <%= render adventure_templates %>
+  <% end %>
+</div>
+
+<%= link_to 'New Adventure Templates', new_adventure_templates_path %>

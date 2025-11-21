@@ -1,0 +1,9 @@
+<h1>Tokenses</h1>
+
+<div id="tokenses">
+  <% @tokenses.each do |tokens| %>
+    <%= render tokens %>
+  <% end %>
+</div>
+
+<%= link_to 'New Tokens', new_tokens_path %>

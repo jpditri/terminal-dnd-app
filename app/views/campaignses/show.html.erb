@@ -1,0 +1,8 @@
+<h1><%= @campaigns.name %></h1>
+
+<%= render @campaigns %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_campaigns_path(@campaigns) %>
+  <%= link_to 'Back', campaignses_path %>
+</div>

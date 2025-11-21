@@ -1,0 +1,9 @@
+<h1>Alignmentses</h1>
+
+<div id="alignmentses">
+  <% @alignmentses.each do |alignments| %>
+    <%= render alignments %>
+  <% end %>
+</div>
+
+<%= link_to 'New Alignments', new_alignments_path %>

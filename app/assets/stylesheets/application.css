@@ -1,0 +1,134 @@
+/*
+ * Terminal D&D Application Stylesheet
+ */
+
+/* ========================================
+ * Narrative Content Markdown Styling
+ * ======================================== */
+
+.narrative-entry {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+/* Paragraph spacing */
+.narrative-entry p {
+  margin: 0.75rem 0;
+}
+
+.narrative-entry p:first-child {
+  margin-top: 0;
+}
+
+.narrative-entry p:last-child {
+  margin-bottom: 0;
+}
+
+/* Bold text - for emphasis and important details */
+.narrative-entry strong {
+  font-weight: 700;
+  color: #ffd700;
+}
+
+/* Italic text - for atmosphere and inner thoughts */
+.narrative-entry em {
+  font-style: italic;
+  color: #a8b5c9;
+}
+
+/* Code formatting - for game mechanics */
+.narrative-entry code {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  color: #4af;
+}
+
+/* Blockquotes - for ancient text and special messages */
+.narrative-entry blockquote {
+  border-left: 4px solid #666;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: #888;
+  font-style: italic;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+}
+
+/* Horizontal rules - for scene transitions */
+.narrative-entry hr {
+  border: none;
+  border-top: 2px solid #444;
+  margin: 1.5rem 0;
+}
+
+/* Lists */
+.narrative-entry ul,
+.narrative-entry ol {
+  margin: 0.75rem 0;
+  padding-left: 2rem;
+}
+
+.narrative-entry li {
+  margin: 0.25rem 0;
+}
+
+/* Headings */
+.narrative-entry h1,
+.narrative-entry h2,
+.narrative-entry h3,
+.narrative-entry h4,
+.narrative-entry h5,
+.narrative-entry h6 {
+  margin: 1rem 0 0.5rem 0;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.narrative-entry h1 { font-size: 1.5em; }
+.narrative-entry h2 { font-size: 1.3em; }
+.narrative-entry h3 { font-size: 1.1em; }
+
+/* Links */
+.narrative-entry a {
+  color: #4af;
+  text-decoration: underline;
+}
+
+.narrative-entry a:hover {
+  color: #6cf;
+}
+
+/* Images */
+.narrative-entry img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+/* Entry type specific styling */
+.narrative-entry.dm {
+  color: #e0e0e0;
+}
+
+.narrative-entry.player {
+  color: #4af;
+}
+
+.narrative-entry.system {
+  color: #888;
+  font-size: 0.9em;
+}
+
+.narrative-entry.error {
+  color: #f44;
+}
+
+.narrative-entry.roll {
+  color: #4a4;
+  font-weight: 500;
+}

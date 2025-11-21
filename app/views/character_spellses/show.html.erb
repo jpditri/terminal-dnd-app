@@ -1,0 +1,8 @@
+<h1><%= @character_spells.name %></h1>
+
+<%= render @character_spells %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_character_spells_path(@character_spells) %>
+  <%= link_to 'Back', character_spellses_path %>
+</div>

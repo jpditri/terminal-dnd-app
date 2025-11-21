@@ -1,0 +1,8 @@
+<h1><%= @encounters.name %></h1>
+
+<%= render @encounters %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_encounters_path(@encounters) %>
+  <%= link_to 'Back', encounterses_path %>
+</div>

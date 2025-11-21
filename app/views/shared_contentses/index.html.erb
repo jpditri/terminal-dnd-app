@@ -1,0 +1,9 @@
+<h1>Shared Contentses</h1>
+
+<div id="shared_contentses">
+  <% @shared_contentses.each do |shared_contents| %>
+    <%= render shared_contents %>
+  <% end %>
+</div>
+
+<%= link_to 'New Shared Contents', new_shared_contents_path %>

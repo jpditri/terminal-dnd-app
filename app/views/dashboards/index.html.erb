@@ -1,0 +1,9 @@
+<h1>Dashboards</h1>
+
+<div id="dashboards">
+  <% @dashboards.each do |dashboard| %>
+    <%= render dashboard %>
+  <% end %>
+</div>
+
+<%= link_to 'New Dashboard', new_dashboard_path %>

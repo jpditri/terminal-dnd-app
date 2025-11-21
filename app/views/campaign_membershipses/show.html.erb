@@ -1,0 +1,8 @@
+<h1><%= @campaign_memberships.name %></h1>
+
+<%= render @campaign_memberships %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_campaign_memberships_path(@campaign_memberships) %>
+  <%= link_to 'Back', campaign_membershipses_path %>
+</div>

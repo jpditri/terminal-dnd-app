@@ -1,0 +1,8 @@
+<h1><%= @homebrew::spells.name %></h1>
+
+<%= render @homebrew::spells %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_homebrew::spells_path(@homebrew::spells) %>
+  <%= link_to 'Back', homebrew::spellses_path %>
+</div>

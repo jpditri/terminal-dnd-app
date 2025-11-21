@@ -1,0 +1,9 @@
+<h1>Dice Rollses</h1>
+
+<div id="dice_rollses">
+  <% @dice_rollses.each do |dice_rolls| %>
+    <%= render dice_rolls %>
+  <% end %>
+</div>
+
+<%= link_to 'New Dice Rolls', new_dice_rolls_path %>

@@ -1,0 +1,9 @@
+<h1>Player Engagementses</h1>
+
+<div id="player_engagementses">
+  <% @player_engagementses.each do |player_engagements| %>
+    <%= render player_engagements %>
+  <% end %>
+</div>
+
+<%= link_to 'New Player Engagements', new_player_engagements_path %>

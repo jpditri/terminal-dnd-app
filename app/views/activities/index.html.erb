@@ -1,0 +1,9 @@
+<h1>Activities</h1>
+
+<div id="activities">
+  <% @activities.each do |activity| %>
+    <%= render activity %>
+  <% end %>
+</div>
+
+<%= link_to 'New Activity', new_activity_path %>

@@ -1,0 +1,8 @@
+<h1><%= @character_features::combat::combat_tracker.name %></h1>
+
+<%= render @character_features::combat::combat_tracker %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_character_features::combat::combat_tracker_path(@character_features::combat::combat_tracker) %>
+  <%= link_to 'Back', character_features::combat::combat_trackers_path %>
+</div>

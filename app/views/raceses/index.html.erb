@@ -1,0 +1,9 @@
+<h1>Raceses</h1>
+
+<div id="raceses">
+  <% @raceses.each do |races| %>
+    <%= render races %>
+  <% end %>
+</div>
+
+<%= link_to 'New Races', new_races_path %>

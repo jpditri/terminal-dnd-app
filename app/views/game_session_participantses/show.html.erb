@@ -1,0 +1,8 @@
+<h1><%= @game_session_participants.name %></h1>
+
+<%= render @game_session_participants %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_game_session_participants_path(@game_session_participants) %>
+  <%= link_to 'Back', game_session_participantses_path %>
+</div>

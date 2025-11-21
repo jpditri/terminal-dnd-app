@@ -1,0 +1,9 @@
+<h1>Conditionses</h1>
+
+<div id="conditionses">
+  <% @conditionses.each do |conditions| %>
+    <%= render conditions %>
+  <% end %>
+</div>
+
+<%= link_to 'New Conditions', new_conditions_path %>

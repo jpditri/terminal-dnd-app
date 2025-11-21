@@ -1,0 +1,8 @@
+<h1><%= @combat_actions.name %></h1>
+
+<%= render @combat_actions %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_combat_actions_path(@combat_actions) %>
+  <%= link_to 'Back', combat_actionses_path %>
+</div>

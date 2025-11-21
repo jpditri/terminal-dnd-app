@@ -1,0 +1,9 @@
+<h1>Dungeon Templateses</h1>
+
+<div id="dungeon_templateses">
+  <% @dungeon_templateses.each do |dungeon_templates| %>
+    <%= render dungeon_templates %>
+  <% end %>
+</div>
+
+<%= link_to 'New Dungeon Templates', new_dungeon_templates_path %>

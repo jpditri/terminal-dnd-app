@@ -1,0 +1,9 @@
+<h1>Campaign Discoveries</h1>
+
+<div id="campaign_discoveries">
+  <% @campaign_discoveries.each do |campaign_discovery| %>
+    <%= render campaign_discovery %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaign Discovery', new_campaign_discovery_path %>

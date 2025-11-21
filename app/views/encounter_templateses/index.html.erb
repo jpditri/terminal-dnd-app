@@ -1,0 +1,9 @@
+<h1>Encounter Templateses</h1>
+
+<div id="encounter_templateses">
+  <% @encounter_templateses.each do |encounter_templates| %>
+    <%= render encounter_templates %>
+  <% end %>
+</div>
+
+<%= link_to 'New Encounter Templates', new_encounter_templates_path %>

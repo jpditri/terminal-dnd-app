@@ -1,0 +1,8 @@
+<h1><%= @friend_requests.name %></h1>
+
+<%= render @friend_requests %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_friend_requests_path(@friend_requests) %>
+  <%= link_to 'Back', friend_requestses_path %>
+</div>

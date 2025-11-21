@@ -1,0 +1,9 @@
+<h1>Worldses</h1>
+
+<div id="worldses">
+  <% @worldses.each do |worlds| %>
+    <%= render worlds %>
+  <% end %>
+</div>
+
+<%= link_to 'New Worlds', new_worlds_path %>

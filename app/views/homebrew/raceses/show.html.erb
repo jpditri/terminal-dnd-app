@@ -1,0 +1,8 @@
+<h1><%= @homebrew::races.name %></h1>
+
+<%= render @homebrew::races %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_homebrew::races_path(@homebrew::races) %>
+  <%= link_to 'Back', homebrew::raceses_path %>
+</div>

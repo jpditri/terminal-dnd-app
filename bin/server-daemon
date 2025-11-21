@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Keep Rails server running as a daemon
+
+set -e
+
+PIDFILE="tmp/pids/server.pid"
+LOGFILE="log/development.log"
+
+case "$1" in
+  start)
+    if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+      echo "Server already running (PID: $(cat $PIDFILE))"
+      exit 0
+    fi
+
+    echo "Starting Rails server..."
+    bin/rails server -d -p 3000
+    echo "Server started (PID: $(cat $PIDFILE))"
+    ;;
+
+  stop)
+    if [ -f "$PIDFILE" ]; then
+      echo "Stopping Rails server (PID: $(cat $PIDFILE))..."
+      kill $(cat "$PIDFILE")
+      rm -f "$PIDFILE"
+      echo "Server stopped"
+    else
+      echo "No server running"
+    fi
+    ;;
+
+  restart)
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
+
+  status)
+    if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") 2>/dev/null; then
+      echo "Server is running (PID: $(cat $PIDFILE))"
+      echo "Uptime: $(ps -p $(cat $PIDFILE) -o etime= | xargs)"
+    else
+      echo "Server is not running"
+      [ -f "$PIDFILE" ] && rm -f "$PIDFILE"
+    fi
+    ;;
+
+  log)
+    tail -f "$LOGFILE"
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop|restart|status|log}"
+    exit 1
+    ;;
+esac

@@ -1,0 +1,8 @@
+<h1><%= @encounter_templates.name %></h1>
+
+<%= render @encounter_templates %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_encounter_templates_path(@encounter_templates) %>
+  <%= link_to 'Back', encounter_templateses_path %>
+</div>

@@ -1,0 +1,8 @@
+<h1><%= @ai_conversations.name %></h1>
+
+<%= render @ai_conversations %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_ai_conversations_path(@ai_conversations) %>
+  <%= link_to 'Back', ai_conversationses_path %>
+</div>

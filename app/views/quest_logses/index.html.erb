@@ -1,0 +1,9 @@
+<h1>Quest Logses</h1>
+
+<div id="quest_logses">
+  <% @quest_logses.each do |quest_logs| %>
+    <%= render quest_logs %>
+  <% end %>
+</div>
+
+<%= link_to 'New Quest Logs', new_quest_logs_path %>

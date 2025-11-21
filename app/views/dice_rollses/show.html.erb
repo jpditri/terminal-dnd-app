@@ -1,0 +1,8 @@
+<h1><%= @dice_rolls.name %></h1>
+
+<%= render @dice_rolls %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_dice_rolls_path(@dice_rolls) %>
+  <%= link_to 'Back', dice_rollses_path %>
+</div>

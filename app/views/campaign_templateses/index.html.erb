@@ -1,0 +1,9 @@
+<h1>Campaign Templateses</h1>
+
+<div id="campaign_templateses">
+  <% @campaign_templateses.each do |campaign_templates| %>
+    <%= render campaign_templates %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaign Templates', new_campaign_templates_path %>

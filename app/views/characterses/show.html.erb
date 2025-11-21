@@ -1,0 +1,8 @@
+<h1><%= @characters.name %></h1>
+
+<%= render @characters %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_characters_path(@characters) %>
+  <%= link_to 'Back', characterses_path %>
+</div>

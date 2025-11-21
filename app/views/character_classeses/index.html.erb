@@ -1,0 +1,9 @@
+<h1>Character Classeses</h1>
+
+<div id="character_classeses">
+  <% @character_classeses.each do |character_classes| %>
+    <%= render character_classes %>
+  <% end %>
+</div>
+
+<%= link_to 'New Character Classes', new_character_classes_path %>

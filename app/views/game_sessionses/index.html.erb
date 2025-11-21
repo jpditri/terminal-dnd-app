@@ -1,0 +1,9 @@
+<h1>Game Sessionses</h1>
+
+<div id="game_sessionses">
+  <% @game_sessionses.each do |game_sessions| %>
+    <%= render game_sessions %>
+  <% end %>
+</div>
+
+<%= link_to 'New Game Sessions', new_game_sessions_path %>

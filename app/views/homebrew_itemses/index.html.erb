@@ -1,0 +1,9 @@
+<h1>Homebrew Itemses</h1>
+
+<div id="homebrew_itemses">
+  <% @homebrew_itemses.each do |homebrew_items| %>
+    <%= render homebrew_items %>
+  <% end %>
+</div>
+
+<%= link_to 'New Homebrew Items', new_homebrew_items_path %>

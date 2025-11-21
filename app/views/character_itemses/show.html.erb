@@ -1,0 +1,8 @@
+<h1><%= @character_items.name %></h1>
+
+<%= render @character_items %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_character_items_path(@character_items) %>
+  <%= link_to 'Back', character_itemses_path %>
+</div>

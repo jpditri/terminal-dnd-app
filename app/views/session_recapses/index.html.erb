@@ -1,0 +1,9 @@
+<h1>Session Recapses</h1>
+
+<div id="session_recapses">
+  <% @session_recapses.each do |session_recaps| %>
+    <%= render session_recaps %>
+  <% end %>
+</div>
+
+<%= link_to 'New Session Recaps', new_session_recaps_path %>

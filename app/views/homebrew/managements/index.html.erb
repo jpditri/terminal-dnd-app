@@ -1,0 +1,9 @@
+<h1>Homebrew::managements</h1>
+
+<div id="homebrew::managements">
+  <% @homebrew::managements.each do |homebrew::management| %>
+    <%= render homebrew::management %>
+  <% end %>
+</div>
+
+<%= link_to 'New Homebrew::management', new_homebrew::management_path %>

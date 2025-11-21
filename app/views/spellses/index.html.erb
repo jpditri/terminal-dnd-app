@@ -1,0 +1,9 @@
+<h1>Spellses</h1>
+
+<div id="spellses">
+  <% @spellses.each do |spells| %>
+    <%= render spells %>
+  <% end %>
+</div>
+
+<%= link_to 'New Spells', new_spells_path %>

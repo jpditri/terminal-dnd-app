@@ -1,0 +1,9 @@
+<h1>Solo Sessionses</h1>
+
+<div id="solo_sessionses">
+  <% @solo_sessionses.each do |solo_sessions| %>
+    <%= render solo_sessions %>
+  <% end %>
+</div>
+
+<%= link_to 'New Solo Sessions', new_solo_sessions_path %>

@@ -1,0 +1,9 @@
+<h1>Combatses</h1>
+
+<div id="combatses">
+  <% @combatses.each do |combats| %>
+    <%= render combats %>
+  <% end %>
+</div>
+
+<%= link_to 'New Combats', new_combats_path %>

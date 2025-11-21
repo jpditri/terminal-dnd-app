@@ -1,0 +1,9 @@
+<h1>Campaign Join Requestses</h1>
+
+<div id="campaign_join_requestses">
+  <% @campaign_join_requestses.each do |campaign_join_requests| %>
+    <%= render campaign_join_requests %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaign Join Requests', new_campaign_join_requests_path %>

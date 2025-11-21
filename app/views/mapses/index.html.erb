@@ -1,0 +1,9 @@
+<h1>Mapses</h1>
+
+<div id="mapses">
+  <% @mapses.each do |maps| %>
+    <%= render maps %>
+  <% end %>
+</div>
+
+<%= link_to 'New Maps', new_maps_path %>

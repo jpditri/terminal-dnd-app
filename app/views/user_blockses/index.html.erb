@@ -1,0 +1,9 @@
+<h1>User Blockses</h1>
+
+<div id="user_blockses">
+  <% @user_blockses.each do |user_blocks| %>
+    <%= render user_blocks %>
+  <% end %>
+</div>
+
+<%= link_to 'New User Blocks', new_user_blocks_path %>

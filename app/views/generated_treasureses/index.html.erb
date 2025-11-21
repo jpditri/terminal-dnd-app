@@ -1,0 +1,9 @@
+<h1>Generated Treasureses</h1>
+
+<div id="generated_treasureses">
+  <% @generated_treasureses.each do |generated_treasures| %>
+    <%= render generated_treasures %>
+  <% end %>
+</div>
+
+<%= link_to 'New Generated Treasures', new_generated_treasures_path %>

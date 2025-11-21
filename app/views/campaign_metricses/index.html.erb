@@ -1,0 +1,9 @@
+<h1>Campaign Metricses</h1>
+
+<div id="campaign_metricses">
+  <% @campaign_metricses.each do |campaign_metrics| %>
+    <%= render campaign_metrics %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaign Metrics', new_campaign_metrics_path %>

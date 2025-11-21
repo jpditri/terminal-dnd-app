@@ -1,0 +1,9 @@
+<h1>Homebrew::spellses</h1>
+
+<div id="homebrew::spellses">
+  <% @homebrew::spellses.each do |homebrew::spells| %>
+    <%= render homebrew::spells %>
+  <% end %>
+</div>
+
+<%= link_to 'New Homebrew::spells', new_homebrew::spells_path %>

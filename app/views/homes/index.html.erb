@@ -1,0 +1,9 @@
+<h1>Homs</h1>
+
+<div id="homs">
+  <% @homs.each do |hom| %>
+    <%= render hom %>
+  <% end %>
+</div>
+
+<%= link_to 'New Hom', new_hom_path %>

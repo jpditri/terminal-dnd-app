@@ -1,0 +1,9 @@
+<h1>Friend Requestses</h1>
+
+<div id="friend_requestses">
+  <% @friend_requestses.each do |friend_requests| %>
+    <%= render friend_requests %>
+  <% end %>
+</div>
+
+<%= link_to 'New Friend Requests', new_friend_requests_path %>

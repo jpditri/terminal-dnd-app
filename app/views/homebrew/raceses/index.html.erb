@@ -1,0 +1,9 @@
+<h1>Homebrew::raceses</h1>
+
+<div id="homebrew::raceses">
+  <% @homebrew::raceses.each do |homebrew::races| %>
+    <%= render homebrew::races %>
+  <% end %>
+</div>
+
+<%= link_to 'New Homebrew::races', new_homebrew::races_path %>

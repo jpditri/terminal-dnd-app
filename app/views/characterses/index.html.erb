@@ -1,0 +1,9 @@
+<h1>Characterses</h1>
+
+<div id="characterses">
+  <% @characterses.each do |characters| %>
+    <%= render characters %>
+  <% end %>
+</div>
+
+<%= link_to 'New Characters', new_characters_path %>

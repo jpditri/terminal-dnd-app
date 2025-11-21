@@ -1,0 +1,8 @@
+<h1><%= @spells.name %></h1>
+
+<%= render @spells %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_spells_path(@spells) %>
+  <%= link_to 'Back', spellses_path %>
+</div>

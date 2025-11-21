@@ -1,0 +1,9 @@
+<h1>Campaigns::analyticses</h1>
+
+<div id="campaigns::analyticses">
+  <% @campaigns::analyticses.each do |campaigns::analytics| %>
+    <%= render campaigns::analytics %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaigns::analytics', new_campaigns::analytics_path %>

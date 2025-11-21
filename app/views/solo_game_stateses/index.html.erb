@@ -1,0 +1,9 @@
+<h1>Solo Game Stateses</h1>
+
+<div id="solo_game_stateses">
+  <% @solo_game_stateses.each do |solo_game_states| %>
+    <%= render solo_game_states %>
+  <% end %>
+</div>
+
+<%= link_to 'New Solo Game States', new_solo_game_states_path %>

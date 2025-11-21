@@ -1,0 +1,9 @@
+<h1>Languageses</h1>
+
+<div id="languageses">
+  <% @languageses.each do |languages| %>
+    <%= render languages %>
+  <% end %>
+</div>
+
+<%= link_to 'New Languages', new_languages_path %>

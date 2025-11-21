@@ -1,0 +1,9 @@
+<h1>Homebrew::classeses</h1>
+
+<div id="homebrew::classeses">
+  <% @homebrew::classeses.each do |homebrew::classes| %>
+    <%= render homebrew::classes %>
+  <% end %>
+</div>
+
+<%= link_to 'New Homebrew::classes', new_homebrew::classes_path %>

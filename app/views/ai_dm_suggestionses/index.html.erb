@@ -1,0 +1,9 @@
+<h1>Ai Dm Suggestionses</h1>
+
+<div id="ai_dm_suggestionses">
+  <% @ai_dm_suggestionses.each do |ai_dm_suggestions| %>
+    <%= render ai_dm_suggestions %>
+  <% end %>
+</div>
+
+<%= link_to 'New Ai Dm Suggestions', new_ai_dm_suggestions_path %>

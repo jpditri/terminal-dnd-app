@@ -1,0 +1,9 @@
+<h1>Homebrew::magic Itemses</h1>
+
+<div id="homebrew::magic_itemses">
+  <% @homebrew::magic_itemses.each do |homebrew::magic_items| %>
+    <%= render homebrew::magic_items %>
+  <% end %>
+</div>
+
+<%= link_to 'New Homebrew::magic Items', new_homebrew::magic_items_path %>

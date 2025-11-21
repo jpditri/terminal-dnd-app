@@ -1,0 +1,9 @@
+<h1>Npcses</h1>
+
+<div id="npcses">
+  <% @npcses.each do |npcs| %>
+    <%= render npcs %>
+  <% end %>
+</div>
+
+<%= link_to 'New Npcs', new_npcs_path %>

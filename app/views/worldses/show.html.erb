@@ -1,0 +1,8 @@
+<h1><%= @worlds.name %></h1>
+
+<%= render @worlds %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_worlds_path(@worlds) %>
+  <%= link_to 'Back', worldses_path %>
+</div>

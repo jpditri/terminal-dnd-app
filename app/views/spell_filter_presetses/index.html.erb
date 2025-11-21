@@ -1,0 +1,9 @@
+<h1>Spell Filter Presetses</h1>
+
+<div id="spell_filter_presetses">
+  <% @spell_filter_presetses.each do |spell_filter_presets| %>
+    <%= render spell_filter_presets %>
+  <% end %>
+</div>
+
+<%= link_to 'New Spell Filter Presets', new_spell_filter_presets_path %>

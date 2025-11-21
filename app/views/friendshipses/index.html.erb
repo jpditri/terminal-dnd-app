@@ -1,0 +1,9 @@
+<h1>Friendshipses</h1>
+
+<div id="friendshipses">
+  <% @friendshipses.each do |friendships| %>
+    <%= render friendships %>
+  <% end %>
+</div>
+
+<%= link_to 'New Friendships', new_friendships_path %>

@@ -1,0 +1,9 @@
+<h1>Content Librarieses</h1>
+
+<div id="content_librarieses">
+  <% @content_librarieses.each do |content_libraries| %>
+    <%= render content_libraries %>
+  <% end %>
+</div>
+
+<%= link_to 'New Content Libraries', new_content_libraries_path %>

@@ -1,0 +1,9 @@
+<h1>Campaigns::bulk Operationses</h1>
+
+<div id="campaigns::bulk_operationses">
+  <% @campaigns::bulk_operationses.each do |campaigns::bulk_operations| %>
+    <%= render campaigns::bulk_operations %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaigns::bulk Operations', new_campaigns::bulk_operations_path %>

@@ -1,0 +1,9 @@
+<h1>Ai Conversationses</h1>
+
+<div id="ai_conversationses">
+  <% @ai_conversationses.each do |ai_conversations| %>
+    <%= render ai_conversations %>
+  <% end %>
+</div>
+
+<%= link_to 'New Ai Conversations', new_ai_conversations_path %>

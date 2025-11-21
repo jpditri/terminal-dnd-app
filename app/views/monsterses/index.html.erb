@@ -1,0 +1,9 @@
+<h1>Monsterses</h1>
+
+<div id="monsterses">
+  <% @monsterses.each do |monsters| %>
+    <%= render monsters %>
+  <% end %>
+</div>
+
+<%= link_to 'New Monsters', new_monsters_path %>

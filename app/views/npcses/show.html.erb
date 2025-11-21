@@ -1,0 +1,8 @@
+<h1><%= @npcs.name %></h1>
+
+<%= render @npcs %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_npcs_path(@npcs) %>
+  <%= link_to 'Back', npcses_path %>
+</div>

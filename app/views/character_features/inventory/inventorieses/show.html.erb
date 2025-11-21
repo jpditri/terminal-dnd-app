@@ -1,0 +1,8 @@
+<h1><%= @character_features::inventory::inventories.name %></h1>
+
+<%= render @character_features::inventory::inventories %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_character_features::inventory::inventories_path(@character_features::inventory::inventories) %>
+  <%= link_to 'Back', character_features::inventory::inventorieses_path %>
+</div>

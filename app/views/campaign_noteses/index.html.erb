@@ -1,0 +1,9 @@
+<h1>Campaign Noteses</h1>
+
+<div id="campaign_noteses">
+  <% @campaign_noteses.each do |campaign_notes| %>
+    <%= render campaign_notes %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaign Notes', new_campaign_notes_path %>

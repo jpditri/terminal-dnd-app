@@ -1,0 +1,8 @@
+<h1><%= @settings::them.name %></h1>
+
+<%= render @settings::them %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_settings::them_path(@settings::them) %>
+  <%= link_to 'Back', settings::thems_path %>
+</div>

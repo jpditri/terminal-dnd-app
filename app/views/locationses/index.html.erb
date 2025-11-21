@@ -1,0 +1,9 @@
+<h1>Locationses</h1>
+
+<div id="locationses">
+  <% @locationses.each do |locations| %>
+    <%= render locations %>
+  <% end %>
+</div>
+
+<%= link_to 'New Locations', new_locations_path %>

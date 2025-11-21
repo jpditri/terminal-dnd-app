@@ -1,0 +1,9 @@
+<h1>Backgroundses</h1>
+
+<div id="backgroundses">
+  <% @backgroundses.each do |backgrounds| %>
+    <%= render backgrounds %>
+  <% end %>
+</div>
+
+<%= link_to 'New Backgrounds', new_backgrounds_path %>

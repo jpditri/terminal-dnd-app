@@ -1,0 +1,9 @@
+<h1>Campaigns::questses</h1>
+
+<div id="campaigns::questses">
+  <% @campaigns::questses.each do |campaigns::quests| %>
+    <%= render campaigns::quests %>
+  <% end %>
+</div>
+
+<%= link_to 'New Campaigns::quests', new_campaigns::quests_path %>

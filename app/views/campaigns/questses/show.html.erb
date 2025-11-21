@@ -1,0 +1,8 @@
+<h1><%= @campaigns::quests.name %></h1>
+
+<%= render @campaigns::quests %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_campaigns::quests_path(@campaigns::quests) %>
+  <%= link_to 'Back', campaigns::questses_path %>
+</div>

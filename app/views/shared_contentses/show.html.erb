@@ -1,0 +1,8 @@
+<h1><%= @shared_contents.name %></h1>
+
+<%= render @shared_contents %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_shared_contents_path(@shared_contents) %>
+  <%= link_to 'Back', shared_contentses_path %>
+</div>

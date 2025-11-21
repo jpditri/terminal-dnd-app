@@ -1,0 +1,9 @@
+<h1>Factionses</h1>
+
+<div id="factionses">
+  <% @factionses.each do |factions| %>
+    <%= render factions %>
+  <% end %>
+</div>
+
+<%= link_to 'New Factions', new_factions_path %>

@@ -1,0 +1,565 @@
+<div class="terminal-container"
+     data-controller="terminal"
+     data-terminal-session-id-value="<%= @session.id %>"
+     data-terminal-map-id-value="<%= @dungeon_map&.id %>">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="character-info">
+      <span class="character-name">
+        <%= @character&.name || 'No Character' %>
+      </span>
+      <% if @character %>
+        <span class="hp-display <%= hp_status_class(@character) %>">
+          HP: <%= @character.current_hp %>/<%= @character.max_hp %>
+        </span>
+        <span>AC: <%= @character.armor_class %></span>
+        <span>Lv.<%= @character.level %> <%= @character.character_class&.name %></span>
+      <% end %>
+    </div>
+    <div class="session-info">
+      <span><%= @session.title || 'New Adventure' %></span>
+      <span>|</span>
+      <span data-terminal-target="clock"><%= Time.current.strftime('%H:%M') %></span>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" data-terminal-target="mainContent">
+    <!-- Narrative Panel -->
+    <div class="narrative-panel" data-terminal-target="narrativePanel">
+      <div class="narrative-output"
+           data-terminal-target="narrativeOutput"
+           data-controller="narrative-box">
+
+        <!-- Initial welcome message -->
+        <div class="narrative-entry dm">
+          <p>Welcome to Terminal D&D!</p>
+          <% if @character %>
+            <p>You are <strong><%= @character.name %></strong>,
+               a level <%= @character.level %> <%= @character.character_class&.name %>.</p>
+          <% else %>
+            <p>Type <code>/create</code> to create a new character, or <code>/load</code> to load an existing one.</p>
+          <% end %>
+        </div>
+
+        <!-- Existing narrative entries -->
+        <% @narrative_entries&.each do |entry| %>
+          <div class="narrative-entry <%= entry.content_type %>"
+               data-narrative-box-target="entry"
+               data-entry-id="<%= entry.id %>">
+            <%= render_narrative_content(entry) %>
+          </div>
+        <% end %>
+
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <div class="input-line">
+          <span class="input-prompt">&gt;</span>
+          <input type="text"
+                 class="input-field"
+                 data-terminal-target="input"
+                 data-action="keydown->terminal#handleKeydown"
+                 placeholder="What would you like to do?"
+                 autofocus>
+        </div>
+
+        <!-- Suggestions Panel -->
+        <div class="suggestions-panel"
+             data-terminal-target="suggestionsPanel"
+             data-controller="suggestions"
+             style="display: none;">
+          <div class="suggestions-header">
+            <span class="suggestions-title">💡 What's next?</span>
+            <button class="suggestions-close"
+                    data-action="click->suggestions#close">
+              ×
+            </button>
+          </div>
+          <div class="suggestions-content" data-suggestions-target="content">
+            <!-- Suggestions will be dynamically added here -->
+          </div>
+          <div class="suggestions-footer">
+            <button class="suggestion-batch-btn"
+                    data-action="click->suggestions#executeSelectedBatch"
+                    data-suggestions-target="batchButton"
+                    style="display: none;">
+              Execute Selected Actions
+            </button>
+            <input type="text"
+                   class="suggestion-custom-input"
+                   data-suggestions-target="customInput"
+                   placeholder="Or type your own action..."
+                   data-action="keydown->suggestions#handleCustomInput">
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions" data-terminal-target="quickActions">
+          <% @quick_actions&.each_with_index do |action, i| %>
+            <button class="quick-action"
+                    data-action="click->terminal#executeQuickAction"
+                    data-action-type="<%= action[:action_type] %>"
+                    data-target-id="<%= action[:target_id] %>"
+                    data-params="<%= action[:params].to_json %>">
+              <%= action[:label] %>
+              <% if i < 9 %>
+                <span class="shortcut">[<%= i + 1 %>]</span>
+              <% end %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Panel -->
+    <div class="map-panel <%= 'hidden' unless @show_map %>" data-terminal-target="mapPanel">
+      <div class="map-header">
+        <span class="map-title"><%= @dungeon_map&.name || 'No Map' %></span>
+        <div class="map-controls">
+          <button data-action="click->terminal#setMapMode"
+                  data-mode="ascii"
+                  class="<%= 'active' if @map_mode == 'ascii' %>">
+            ASCII
+          </button>
+          <button data-action="click->terminal#setMapMode"
+                  data-mode="svg"
+                  class="<%= 'active' if @map_mode == 'svg' %>">
+            SVG
+          </button>
+          <button data-action="click->terminal#setMapMode"
+                  data-mode="sprite"
+                  class="<%= 'active' if @map_mode == 'sprite' %>">
+            Tiles
+          </button>
+          <button data-action="click->terminal#exportMap">
+            Export
+          </button>
+        </div>
+      </div>
+
+      <div class="map-display" data-terminal-target="mapDisplay">
+        <% if @dungeon_map %>
+          <% if @map_mode == 'ascii' %>
+            <pre class="map-ascii" data-terminal-target="mapAscii"><%= @map_ascii %></pre>
+          <% else %>
+            <canvas class="map-canvas"
+                    data-terminal-target="mapCanvas"
+                    width="<%= @dungeon_map.width * 16 %>"
+                    height="<%= @dungeon_map.height * 16 %>">
+            </canvas>
+          <% end %>
+        <% else %>
+          <div style="color: var(--text-muted); text-align: center;">
+            <p>No map loaded</p>
+            <p style="font-size: 12px;">Use <code>/map generate</code> to create one</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Side Panel (tmux-style split) -->
+    <div class="side-panel hidden" data-terminal-target="sidePanel">
+      <div class="side-panel-header">
+        <span class="side-panel-title" data-terminal-target="sidePanelTitle">Character Sheet</span>
+        <button class="side-panel-close" data-action="click->terminal#toggleSidePanel">×</button>
+      </div>
+      <div class="side-panel-content" data-terminal-target="sidePanelContent">
+        <!-- Content will be dynamically loaded -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Actions Panel -->
+  <div class="pending-actions-panel" data-terminal-target="pendingActions" style="display: none;"></div>
+
+  <!-- Character Status Panel (for updates) -->
+  <div class="character-status-panel" data-terminal-target="characterStatus" style="display: none;"></div>
+
+  <!-- Tooltip container -->
+  <div class="tooltip" data-terminal-target="tooltip" style="display: none;"></div>
+
+  <!-- Context menu container -->
+  <div class="context-menu" data-terminal-target="contextMenu" style="display: none;"></div>
+</div>
+
+<style>
+  /* Pending Actions Panel Styles */
+  .pending-actions-panel {
+    position: fixed;
+    bottom: 120px;
+    right: 20px;
+    width: 300px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: var(--background-dark, #1a1a1a);
+    border: 1px solid var(--border-color, #3d3d3d);
+    border-radius: 4px;
+    padding: 10px;
+    z-index: 1000;
+  }
+
+  .pending-header {
+    color: var(--accent-color, #7c3aed);
+    font-weight: bold;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-color, #3d3d3d);
+  }
+
+  .pending-action {
+    margin-bottom: 10px;
+    padding: 8px;
+    background: var(--background-lighter, #2d2d2d);
+    border-radius: 4px;
+  }
+
+  .pending-description {
+    color: var(--text-primary, #e0e0e0);
+    margin-bottom: 5px;
+  }
+
+  .pending-reason {
+    color: var(--text-muted, #888);
+    font-size: 12px;
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+
+  .pending-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .approve-btn, .reject-btn {
+    flex: 1;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .approve-btn {
+    background: var(--success-color, #22c55e);
+    color: white;
+  }
+
+  .approve-btn:hover {
+    background: var(--success-hover, #16a34a);
+  }
+
+  .reject-btn {
+    background: var(--error-color, #ef4444);
+    color: white;
+  }
+
+  .reject-btn:hover {
+    background: var(--error-hover, #dc2626);
+  }
+
+  /* Suggestions Panel Styles */
+  .suggestions-panel {
+    margin-top: 16px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+    border: 2px solid var(--accent-color, #7c3aed);
+    border-radius: 8px;
+    padding: 12px;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .suggestions-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--accent-color, #7c3aed);
+  }
+
+  .suggestions-title {
+    color: var(--accent-color, #7c3aed);
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  .suggestions-close {
+    background: none;
+    border: none;
+    color: var(--text-muted, #888);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .suggestions-close:hover {
+    color: var(--text-primary, #e0e0e0);
+  }
+
+  .suggestions-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .suggestion-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    border-radius: 6px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .suggestion-item:hover {
+    background: rgba(124, 58, 237, 0.2);
+    border-color: var(--accent-color, #7c3aed);
+    transform: translateX(4px);
+  }
+
+  .suggestion-item.selected {
+    background: rgba(124, 58, 237, 0.3);
+    border-color: var(--accent-color, #7c3aed);
+    border-width: 2px;
+  }
+
+  .suggestion-item.selected::before {
+    content: '✓';
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    color: var(--success-color, #22c55e);
+    font-weight: bold;
+  }
+
+  .suggestion-header-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .suggestion-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .suggestion-action {
+    color: var(--text-primary, #e0e0e0);
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .suggestion-checkbox {
+    margin-left: auto;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+
+  .suggestion-examples {
+    color: var(--text-muted, #888);
+    font-size: 12px;
+    margin-left: 26px;
+    font-style: italic;
+  }
+
+  .suggestion-example-link {
+    color: var(--accent-light, #a78bfa);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .suggestion-example-link:hover {
+    color: var(--accent-color, #7c3aed);
+    text-decoration: underline;
+  }
+
+  .suggestions-footer {
+    display: flex;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(124, 58, 237, 0.3);
+  }
+
+  .suggestion-batch-btn {
+    flex: 1;
+    padding: 8px 16px;
+    background: var(--accent-color, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+
+  .suggestion-batch-btn:hover {
+    background: var(--accent-hover, #6d28d9);
+  }
+
+  .suggestion-custom-input {
+    flex: 2;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color, #3d3d3d);
+    border-radius: 4px;
+    color: var(--text-primary, #e0e0e0);
+    font-family: 'Courier New', monospace;
+  }
+
+  .suggestion-custom-input:focus {
+    outline: none;
+    border-color: var(--accent-color, #7c3aed);
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .suggestion-custom-input::placeholder {
+    color: var(--text-muted, #888);
+  }
+
+  /* Split-pane / tmux-style side panel */
+  .main-content {
+    display: flex;
+    gap: 0;
+    height: calc(100vh - 80px);
+    position: relative;
+  }
+
+  .main-content.split-mode .narrative-panel {
+    width: 60%;
+    border-right: 2px solid var(--accent-color, #7c3aed);
+  }
+
+  .main-content.split-mode .side-panel {
+    width: 40%;
+  }
+
+  .narrative-panel {
+    flex: 1;
+    transition: width 0.3s ease;
+  }
+
+  .side-panel {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 40%;
+    height: 100%;
+    background: var(--background-dark, #1a1a1a);
+    border-left: 2px solid var(--accent-color, #7c3aed);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+    z-index: 100;
+  }
+
+  .side-panel.hidden {
+    transform: translateX(100%);
+  }
+
+  .side-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--background-lighter, #2d2d2d);
+    border-bottom: 1px solid var(--accent-color, #7c3aed);
+  }
+
+  .side-panel-title {
+    color: var(--accent-color, #7c3aed);
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    text-transform: uppercase;
+  }
+
+  .side-panel-close {
+    background: none;
+    border: none;
+    color: var(--text-muted, #888);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .side-panel-close:hover {
+    color: var(--text-primary, #e0e0e0);
+  }
+
+  .side-panel-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--text-primary, #e0e0e0);
+  }
+
+  /* Terminal-style content formatting */
+  .side-panel-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .side-panel-content .stat-block {
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(124, 58, 237, 0.05);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    border-radius: 4px;
+  }
+
+  .side-panel-content .stat-header {
+    color: var(--accent-color, #7c3aed);
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--accent-color, #7c3aed);
+    padding-bottom: 4px;
+  }
+
+  .side-panel-content .stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+  }
+
+  .side-panel-content .stat-row:last-child {
+    border-bottom: none;
+  }
+
+  .side-panel-content .stat-label {
+    color: var(--text-muted, #888);
+  }
+
+  .side-panel-content .stat-value {
+    color: var(--accent-light, #a78bfa);
+    font-weight: bold;
+  }
+</style>

@@ -1,0 +1,8 @@
+<h1><%= @quest_logs.name %></h1>
+
+<%= render @quest_logs %>
+
+<div class="actions">
+  <%= link_to 'Edit', edit_quest_logs_path(@quest_logs) %>
+  <%= link_to 'Back', quest_logses_path %>
+</div>

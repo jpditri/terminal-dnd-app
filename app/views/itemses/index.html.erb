@@ -1,0 +1,9 @@
+<h1>Itemses</h1>
+
+<div id="itemses">
+  <% @itemses.each do |items| %>
+    <%= render items %>
+  <% end %>
+</div>
+
+<%= link_to 'New Items', new_items_path %>

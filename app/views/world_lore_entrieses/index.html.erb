@@ -1,0 +1,9 @@
+<h1>World Lore Entrieses</h1>
+
+<div id="world_lore_entrieses">
+  <% @world_lore_entrieses.each do |world_lore_entries| %>
+    <%= render world_lore_entries %>
+  <% end %>
+</div>
+
+<%= link_to 'New World Lore Entries', new_world_lore_entries_path %>
