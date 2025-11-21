@@ -1,0 +1,403 @@
+# Character Creation Wizard - MDSL Specification
+
+## Feature: Guided Multi-Step Character Creation
+
+### Context
+Current character creation is too abrupt - the AI creates a character all at once. Players should have a guided, conversational wizard that walks them through each step of character creation.
+
+### Goals
+- Multi-step guided creation process
+- Clear progress indication
+- Ability to go back and change decisions
+- Natural conversation flow with AI DM
+- Room-based state tracking
+
+---
+
+## Creation Steps
+
+### Step 1: Concept & Name
+```
+DM: "Welcome! Let's create your character. What kind of hero do you envision? A brave warrior, a cunning rogue, a wise wizard?"
+
+Player: "I want to be a sneaky thief"
+
+DM: "Excellent choice! A rogue then. What's your character's name?"
+
+Player: "Archibald"
+
+DM: "Archibald the Rogue - I like it! Let's continue..."
+```
+
+### Step 2: Race Selection
+```
+DM: "What race is Archibald? Common choices include:
+- **Human** - Versatile and adaptable
+- **Elf** - Graceful and perceptive
+- **Dwarf** - Sturdy and resilient
+- **Halfling** - Nimble and lucky
+
+Or tell me something more exotic!"
+
+Player: "Halfling"
+
+DM: "A halfling rogue! Nimble, naturally lucky, and excellent at going unnoticed. Your size and agility will serve you well."
+```
+
+### Step 3: Ability Scores
+```
+DM: "Let's determine your ability scores. You can:
+1. **Use Standard Array** - 15, 14, 13, 12, 10, 8 (recommended for new players)
+2. **Roll Dice** - Roll 4d6 drop lowest, six times (more random)
+3. **Point Buy** - 27 points to distribute (balanced)
+
+Which method would you prefer?"
+
+Player: "Standard array"
+
+DM: "Great choice! Assign these scores to your abilities:
+**Available:** 15, 14, 13, 12, 10, 8
+
+As a rogue, you'll want high DEX for sneaking and attack. CHA or INT can help with skills. What would you like for each stat?"
+
+[Quick Actions appear: Assign to DEX, Assign to STR, etc.]
+```
+
+### Step 4: Background
+```
+DM: "Every adventurer has a past. What was Archibald's life before adventuring?
+
+Common backgrounds:
+- **Criminal** - You've lived outside the law
+- **Folk Hero** - You stood up for the common folk
+- **Sage** - You spent years studying in a library
+- **Soldier** - You trained for war
+
+Or describe your own background!"
+
+Player: "He was a watchmaker who turned to crime"
+
+DM: "Fascinating! I'll use the Criminal background, but we'll note your watchmaking expertise. You gain proficiency in Thieves' Tools and one of: Stealth, Deception."
+```
+
+### Step 5: Starting Equipment
+```
+DM: "Based on your class and background, you start with:
+
+**Weapons:**
+- Rapier (1d8 piercing, finesse)
+- Shortbow (1d6 piercing, range 80/320)
+
+**Armor:**
+- Leather armor (AC 11 + DEX modifier)
+
+**Tools:**
+- Thieves' tools
+- Watchmaker's tools (from background)
+
+**Other Gear:**
+- Backpack
+- Bedroll, rations (10 days)
+- Rope (50 ft)
+- 15 gold pieces
+
+Is this acceptable, or would you like to customize?"
+
+[Quick Actions: Accept Equipment, Customize]
+```
+
+### Step 6: Final Review & Confirmation
+```
+DM: "Let's review Archibald:
+
+**Name:** Archibald
+**Race:** Halfling
+**Class:** Rogue, Level 1
+**Background:** Criminal (Watchmaker)
+
+**Ability Scores:**
+- STR 8 (-1), DEX 15 (+2), CON 13 (+1)
+- INT 12 (+1), WIS 10 (+0), CHA 14 (+2)
+
+**AC:** 13 (leather armor)
+**HP:** 9 (8 + 1 CON)
+**Equipment:** Rapier, shortbow, leather armor, thieves' tools
+
+**Proficiencies:**
+- Skills: Stealth, Deception, Acrobatics, Sleight of Hand
+- Tools: Thieves' tools, Watchmaker's tools
+
+Ready to begin your adventure?"
+
+[Quick Actions: Start Adventure, Make Changes, View Full Sheet]
+```
+
+---
+
+## Room Flow
+
+### State Transitions
+```
+lobby (choose to create)
+  ↓
+character_creation (step: concept)
+  ↓
+character_creation (step: race)
+  ↓
+character_creation (step: abilities)
+  ↓
+character_creation (step: background)
+  ↓
+character_creation (step: equipment)
+  ↓
+character_creation (step: review)
+  ↓ (player confirms)
+tavern (character locked, game begins)
+```
+
+---
+
+## Database Schema
+
+### Add Creation Step Tracking
+```ruby
+add_column :terminal_sessions, :creation_step, :string
+add_column :terminal_sessions, :creation_data, :jsonb, default: {}
+
+creation_steps:
+  - concept (class decision)
+  - race
+  - abilities
+  - background
+  - equipment
+  - review
+```
+
+---
+
+## Business Logic
+
+### Creation Wizard Service
+```ruby
+class Terminal::CharacterCreationWizard
+  STEPS = %w[concept race abilities background equipment review].freeze
+
+  def initialize(session)
+    @session = session
+  end
+
+  def current_step
+    @session.creation_step || 'concept'
+  end
+
+  def advance_to(step)
+    return false unless STEPS.include?(step)
+
+    @session.update!(creation_step: step)
+    true
+  end
+
+  def go_back
+    current_index = STEPS.index(current_step)
+    return false if current_index.zero?
+
+    previous_step = STEPS[current_index - 1]
+    @session.update!(creation_step: previous_step)
+    true
+  end
+
+  def save_step_data(data)
+    creation_data = @session.creation_data || {}
+    creation_data[current_step] = data
+    @session.update!(creation_data: creation_data)
+  end
+
+  def complete_creation
+    # Build character from creation_data
+    character = Character.create!(
+      user: @session.user,
+      campaign: @session.campaign,
+      name: @session.creation_data['concept']['name'],
+      race: Race.find_by(name: @session.creation_data['race']['name']),
+      character_class: CharacterClass.find_by(name: @session.creation_data['concept']['class']),
+      # ... all other attributes
+    )
+
+    @session.update!(
+      character: character,
+      creation_step: nil,
+      creation_data: {}
+    )
+
+    # Transition to game
+    @session.transition_to_room('tavern')
+
+    character
+  end
+
+  def step_prompt
+    case current_step
+    when 'concept'
+      concept_prompt
+    when 'race'
+      race_prompt
+    when 'abilities'
+      abilities_prompt
+    when 'background'
+      background_prompt
+    when 'equipment'
+      equipment_prompt
+    when 'review'
+      review_prompt
+    end
+  end
+end
+```
+
+---
+
+## AI DM Integration
+
+### Context Enhancement
+```ruby
+def character_creation_context
+  return nil unless @session.current_room == 'character_creation'
+
+  wizard = Terminal::CharacterCreationWizard.new(@session)
+
+  <<~CONTEXT
+    CHARACTER CREATION IN PROGRESS:
+    Current Step: #{wizard.current_step} (#{wizard.current_step_number}/#{wizard.total_steps})
+
+    #{wizard.step_prompt}
+
+    CREATION GUIDANCE:
+    - Be conversational and helpful
+    - Ask clarifying questions
+    - Offer suggestions based on player's expressed concept
+    - Use create_character tool ONLY at final review step
+    - Save partial data using save_creation_step tool
+
+    Player can say "back" or "previous" to return to previous step.
+  CONTEXT
+end
+```
+
+---
+
+## New Tools
+
+### save_creation_step
+```ruby
+{
+  tool: 'save_creation_step',
+  description: 'Save data from current creation step',
+  parameters: {
+    step: string, # current step name
+    data: object  # step-specific data
+  },
+  example: {
+    step: 'race',
+    data: {
+      race_name: 'Halfling',
+      racial_traits: ['Lucky', 'Brave', 'Halfling Nimbleness']
+    }
+  }
+}
+```
+
+### advance_creation_step
+```ruby
+{
+  tool: 'advance_creation_step',
+  description: 'Move to next step in character creation',
+  parameters: {
+    next_step: string # optional, auto-advances if not provided
+  }
+}
+```
+
+---
+
+## UI Enhancements
+
+### Progress Indicator
+```html
+<div class="creation-progress" data-terminal-target="creationProgress">
+  <div class="progress-step completed">1. Concept ✓</div>
+  <div class="progress-step completed">2. Race ✓</div>
+  <div class="progress-step active">3. Abilities ←</div>
+  <div class="progress-step">4. Background</div>
+  <div class="progress-step">5. Equipment</div>
+  <div class="progress-step">6. Review</div>
+</div>
+```
+
+### Step-Specific Quick Actions
+
+**Concept Step:**
+- [Fighter] [Wizard] [Rogue] [Cleric]
+
+**Race Step:**
+- [Human] [Elf] [Dwarf] [Halfling] [Other]
+
+**Abilities Step:**
+- [Standard Array] [Roll Dice] [Point Buy]
+
+**Background Step:**
+- [Criminal] [Sage] [Soldier] [Folk Hero] [Acolyte]
+
+**Equipment Step:**
+- [Accept Default] [Customize]
+
+**Review Step:**
+- [Start Adventure] [Make Changes] [View Full Sheet]
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Wizard Service (2 hours)
+- [ ] Create CharacterCreationWizard service
+- [ ] Add step tracking to terminal_sessions
+- [ ] Implement step navigation (advance, go_back)
+- [ ] Add step-specific prompts
+
+### Phase 2: Tool Integration (1-2 hours)
+- [ ] Add save_creation_step tool
+- [ ] Add advance_creation_step tool
+- [ ] Update create_character to work with wizard
+- [ ] Add creation context to Orchestrator
+
+### Phase 3: UI Components (2-3 hours)
+- [ ] Create progress indicator component
+- [ ] Add step-specific quick actions
+- [ ] Style creation room differently
+- [ ] Add "back" button for navigation
+
+### Phase 4: Flow Testing (1 hour)
+- [ ] Test full creation flow
+- [ ] Test going back and changing decisions
+- [ ] Test abandoning and restarting creation
+- [ ] Test validation at each step
+
+---
+
+## Edge Cases
+
+1. **Abandoning creation mid-way:** Save draft, allow resume
+2. **Invalid race/class combo:** Validate and warn
+3. **Ability score total too high/low:** Validate constraints
+4. **Going back after final step:** Allow un-commit
+5. **Multiple creation attempts:** Clear previous draft
+
+---
+
+## Success Criteria
+
+- ✅ Guided flow feels natural and conversational
+- ✅ Progress clearly indicated at each step
+- ✅ Can go back and change decisions
+- ✅ AI DM adapts questions based on player's concept
+- ✅ Final character is complete and valid
+- ✅ Smooth transition from creation to gameplay

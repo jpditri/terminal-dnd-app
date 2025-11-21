@@ -1,0 +1,518 @@
+# Room UI Indicators - MDSL Specification
+
+## Feature: Visual Indicators for Room State & Character Lock
+
+### Context
+Players need to know:
+- Which "room" they're currently in
+- Whether their character is locked/editable
+- How to navigate between rooms
+- What actions are available in current room
+
+### Goals
+- Clear visual indication of current room
+- Character lock status badge/icon
+- Room transition notifications
+- Breadcrumb navigation
+
+---
+
+## UI Components
+
+### 1. Room Indicator in Status Bar
+```
+┌─────────────────────────────────────────────────────────┐
+│ 📍 Tavern │ Archibald (Rogue 3) │ HP: 22/22 │ AC: 15 │ 🔒 │
+└─────────────────────────────────────────────────────────┘
+         ↑                                              ↑
+    Current Room                              Character Locked
+```
+
+### 2. Character Lock Badge
+```
+States:
+✏️  - Editable (lobby, character_creation)
+🔒 - Locked (game started)
+⚔️  - Hard Locked (in combat, cannot unlock)
+```
+
+### 3. Room Transition Animation
+```
+Current: Lobby
+↓ (player says "I'm ready to start")
+Transitioning...
+↓
+New: The Rusty Flagon Tavern
+🔒 Character locked for gameplay
+```
+
+### 4. Breadcrumb Navigation (Optional)
+```
+Home > Lobby > Tavern > Town Square
+                          ↑ You are here
+```
+
+---
+
+## HTML Structure
+
+### Status Bar Enhancement
+```html
+<div class="status-bar">
+  <!-- Room Indicator -->
+  <div class="room-indicator" data-terminal-target="roomIndicator">
+    <span class="room-icon">📍</span>
+    <span class="room-name" data-terminal-target="roomName">Lobby</span>
+  </div>
+
+  <!-- Character Info -->
+  <div class="character-info">
+    <span class="character-name">
+      <%= @character&.name || 'No Character' %>
+    </span>
+    <% if @character %>
+      <span class="hp-display <%= hp_status_class(@character) %>">
+        HP: <%= @character.current_hp %>/<%= @character.max_hp %>
+      </span>
+      <span>AC: <%= @character.armor_class %></span>
+      <span>Lv.<%= @character.level %> <%= @character.character_class&.name %></span>
+    <% end %>
+  </div>
+
+  <!-- Lock Status Badge -->
+  <div class="lock-status" data-terminal-target="lockStatus" title="Character editable">
+    <span class="lock-icon">✏️</span>
+  </div>
+
+  <!-- Session Info -->
+  <div class="session-info">
+    <span><%= @session.title || 'New Adventure' %></span>
+    <span>|</span>
+    <span data-terminal-target="clock"><%= Time.current.strftime('%H:%M') %></span>
+  </div>
+</div>
+```
+
+---
+
+## CSS Styling
+
+### Room Indicator
+```css
+.room-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid var(--accent-color);
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.room-icon {
+  font-size: 14px;
+}
+
+.room-name {
+  color: var(--accent-color);
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+/* Room-specific colors */
+.room-indicator[data-room="lobby"] {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: #6366f1;
+}
+
+.room-indicator[data-room="combat"] {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+  animation: pulse 2s infinite;
+}
+
+.room-indicator[data-room="tavern"],
+.room-indicator[data-room="town"],
+.room-indicator[data-room="wilderness"] {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+```
+
+### Lock Status Badge
+```css
+.lock-status {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  cursor: help;
+  transition: all 0.3s;
+}
+
+.lock-status[data-locked="false"] {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.lock-status[data-locked="true"] {
+  background: rgba(234, 179, 8, 0.2);
+}
+
+.lock-status[data-locked="combat"] {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.lock-icon {
+  font-size: 16px;
+  filter: drop-shadow(0 0 2px currentColor);
+}
+
+.lock-status:hover {
+  transform: scale(1.1);
+}
+```
+
+### Room Transition Notification
+```css
+.room-transition {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--background-dark);
+  border: 2px solid var(--accent-color);
+  border-radius: 12px;
+  padding: 24px 32px;
+  z-index: 9999;
+  animation: fadeInScale 0.3s ease-out;
+  text-align: center;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.room-transition-title {
+  font-size: 18px;
+  color: var(--accent-color);
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.room-transition-arrow {
+  font-size: 32px;
+  margin: 12px 0;
+  color: var(--text-muted);
+}
+
+.room-transition-new {
+  font-size: 24px;
+  color: var(--accent-color);
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.room-transition-lock {
+  font-size: 14px;
+  color: var(--warning-color);
+  font-style: italic;
+}
+```
+
+---
+
+## JavaScript Controller Methods
+
+### Update Room Indicator
+```javascript
+updateRoomIndicator(roomName, locked = false) {
+  if (!this.hasRoomNameTarget) return
+
+  this.roomNameTarget.textContent = this.formatRoomName(roomName)
+  this.roomIndicatorTarget.dataset.room = roomName
+
+  // Update lock status
+  if (this.hasLockStatusTarget) {
+    this.updateLockStatus(locked, roomName === 'combat')
+  }
+}
+
+updateLockStatus(locked, inCombat = false) {
+  const lockIcon = this.lockStatusTarget.querySelector('.lock-icon')
+
+  if (inCombat) {
+    lockIcon.textContent = '⚔️'
+    this.lockStatusTarget.dataset.locked = 'combat'
+    this.lockStatusTarget.title = 'Character hard-locked (in combat)'
+  } else if (locked) {
+    lockIcon.textContent = '🔒'
+    this.lockStatusTarget.dataset.locked = 'true'
+    this.lockStatusTarget.title = 'Character locked for gameplay'
+  } else {
+    lockIcon.textContent = '✏️'
+    this.lockStatusTarget.dataset.locked = 'false'
+    this.lockStatusTarget.title = 'Character editable'
+  }
+}
+
+formatRoomName(room) {
+  const names = {
+    lobby: 'Lobby',
+    character_creation: 'Character Creation',
+    tavern: 'Tavern',
+    town: 'Town Square',
+    wilderness: 'Wilderness',
+    dungeon: 'Dungeon',
+    combat: 'Combat!',
+    character_sheet_view: 'Character Sheet'
+  }
+
+  return names[room] || room
+}
+```
+
+### Show Room Transition
+```javascript
+showRoomTransition(fromRoom, toRoom, locked = false) {
+  const overlay = document.createElement('div')
+  overlay.className = 'room-transition'
+  overlay.innerHTML = `
+    <div class="room-transition-title">Entering</div>
+    <div class="room-transition-arrow">↓</div>
+    <div class="room-transition-new">${this.formatRoomName(toRoom)}</div>
+    ${locked ? '<div class="room-transition-lock">🔒 Character locked for gameplay</div>' : ''}
+  `
+
+  document.body.appendChild(overlay)
+
+  // Auto-remove after 2 seconds
+  setTimeout(() => {
+    overlay.style.opacity = '0'
+    setTimeout(() => overlay.remove(), 300)
+  }, 2000)
+}
+```
+
+---
+
+## WebSocket Messages
+
+### Room Change Event
+```ruby
+# From RoomManager when room transitions
+broadcast_to @session, {
+  type: 'room_changed',
+  from_room: old_room,
+  to_room: new_room,
+  character_locked: @session.character_locked,
+  room_info: {
+    name: room_name,
+    description: room_description,
+    allowed_actions: room_quick_actions
+  },
+  timestamp: Time.current.iso8601
+}
+```
+
+### Lock Status Change
+```ruby
+broadcast_to @session, {
+  type: 'lock_status_changed',
+  locked: true,
+  reason: 'Entering gameplay area',
+  can_unlock: false,
+  timestamp: Time.current.iso8601
+}
+```
+
+---
+
+## Message Handlers
+
+### Handle Room Changed
+```javascript
+case 'room_changed':
+  this.updateRoomIndicator(data.to_room, data.character_locked)
+  this.showRoomTransition(data.from_room, data.to_room, data.character_locked)
+
+  // Update available quick actions
+  if (data.room_info && data.room_info.allowed_actions) {
+    this.updateQuickActions(data.room_info.allowed_actions)
+  }
+
+  // Show room description
+  if (data.room_info && data.room_info.description) {
+    this.appendNarrative('system', `*${data.room_info.description}*`)
+  }
+  break
+```
+
+### Handle Lock Status Changed
+```javascript
+case 'lock_status_changed':
+  this.updateLockStatus(data.locked, false)
+
+  const message = data.locked
+    ? `🔒 Character locked: ${data.reason}`
+    : '✏️ Character unlocked - you may edit your character'
+
+  this.appendNarrative('system', message)
+  break
+```
+
+---
+
+## Room-Specific UI Enhancements
+
+### Lobby
+- Light blue theme
+- "Create" and "Browse" buttons prominent
+- Welcoming message
+
+### Character Creation
+- Purple theme (brand color)
+- Step indicators (1/5: Choose Race, 2/5: Choose Class, etc.)
+- Progress bar
+
+### Tavern/Town/Wilderness
+- Green theme (adventure/exploration)
+- Location description in side panel
+- NPC quick actions
+
+### Combat
+- Red theme with pulsing animation
+- Initiative order in side panel
+- Combat-specific quick actions only
+- Turn indicator
+
+### Dungeon
+- Dark gray theme
+- Map prominent
+- Stealth/perception reminders
+
+---
+
+## Accessibility
+
+### ARIA Labels
+```html
+<div class="room-indicator"
+     role="status"
+     aria-live="polite"
+     aria-label="Current location: Tavern">
+  <span class="room-icon" aria-hidden="true">📍</span>
+  <span class="room-name">Tavern</span>
+</div>
+
+<div class="lock-status"
+     role="status"
+     aria-live="polite"
+     aria-label="Character locked for gameplay">
+  <span class="lock-icon" aria-hidden="true">🔒</span>
+</div>
+```
+
+### Keyboard Navigation
+- No keyboard traps in transition overlays
+- Focus returns to input after transition
+- Lock status clickable for more info
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Status Bar Updates (1 hour)
+- [ ] Add room indicator HTML to status bar
+- [ ] Add lock status badge to status bar
+- [ ] Add CSS styling for different room types
+- [ ] Add Stimulus targets for dynamic updates
+
+### Phase 2: Transition Notifications (1 hour)
+- [ ] Create transition overlay component
+- [ ] Add showRoomTransition JavaScript method
+- [ ] Add fadeout animation
+- [ ] Test with different room types
+
+### Phase 3: WebSocket Integration (1 hour)
+- [ ] Broadcast room_changed events from RoomManager
+- [ ] Broadcast lock_status_changed events
+- [ ] Add message handlers in terminal_controller.js
+- [ ] Update room indicator and lock badge on events
+
+### Phase 4: Room-Specific Theming (Optional, 1 hour)
+- [ ] Add room-specific color themes
+- [ ] Add room-specific quick actions
+- [ ] Add room descriptions in side panel
+- [ ] Combat pulsing animation
+
+---
+
+## Testing Strategy
+
+### Visual Regression Tests
+```javascript
+describe('Room Indicators', () => {
+  it('displays current room in status bar', () => {
+    expect(page).to have_css('.room-name', text: 'Tavern')
+  })
+
+  it('shows lock icon when character locked', () => {
+    expect(page).to have_css('.lock-icon', text: '🔒')
+  })
+
+  it('shows transition notification on room change', () => {
+    transition_to_room('tavern')
+    expect(page).to have_css('.room-transition')
+    expect(page).to have_text('Entering')
+    expect(page).to have_text('Tavern')
+  })
+})
+```
+
+### Integration Tests
+```ruby
+describe 'Room Transitions' do
+  it 'updates UI when room changes' do
+    session.transition_to_room('tavern')
+
+    expect(page).to have_css('[data-room="tavern"]')
+    expect(page).to have_css('.lock-icon', text: '🔒')
+  end
+
+  it 'shows transition overlay' do
+    visit terminal_session_path(session)
+
+    fill_in 'input', with: "I'm ready to start"
+    click_button 'Send'
+
+    expect(page).to have_css('.room-transition')
+  end
+end
+```
+
+---
+
+## Success Criteria
+
+- ✅ Room name always visible in status bar
+- ✅ Lock status clear at a glance
+- ✅ Smooth transition animations
+- ✅ Room changes broadcast immediately
+- ✅ Different visual themes for room types
+- ✅ No layout shift when room changes
+- ✅ Accessible to screen readers

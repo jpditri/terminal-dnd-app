@@ -1,0 +1,289 @@
+# Equipment & Armor System - MDSL Specification
+
+## Feature: Equipment System with AC Calculation
+
+### Context
+Players need to equip armor, shields, and weapons to improve their Armor Class (AC) and combat effectiveness. Currently, AC is hardcoded as 10 + DEX modifier without considering equipment.
+
+### Goals
+- Track equipped items (armor, shield, weapons, accessories)
+- Calculate AC from worn armor + shield + DEX modifier
+- Enforce armor proficiency restrictions
+- Handle equipment weight and encumbrance
+
+---
+
+## Data Model
+
+### Equipment Slots
+```
+character_equipment_slots:
+  - head (helmet, circlet)
+  - body (armor - mutually exclusive types)
+  - shield (shield - requires free hand)
+  - main_hand (weapon)
+  - off_hand (weapon, shield, or empty)
+  - ring_1, ring_2 (magic rings)
+  - neck (amulet, necklace)
+  - back (cloak, cape)
+```
+
+### Armor Types & Base AC
+```
+armor_types:
+  none: AC 10 + full DEX modifier
+  light_armor: AC base + full DEX modifier (proficiency required)
+    - Padded: AC 11
+    - Leather: AC 11
+    - Studded Leather: AC 12
+  medium_armor: AC base + DEX modifier (max +2)
+    - Hide: AC 12
+    - Chain Shirt: AC 13
+    - Scale Mail: AC 14
+    - Breastplate: AC 14
+    - Half Plate: AC 15
+  heavy_armor: AC base + no DEX modifier
+    - Ring Mail: AC 14
+    - Chain Mail: AC 16
+    - Splint: AC 17
+    - Plate: AC 18
+  shield: +2 AC bonus (requires free hand)
+```
+
+---
+
+## Database Schema
+
+### Migration: AddEquipmentSlots
+```ruby
+create_table :character_equipment_slots do |t|
+  t.references :character, null: false, foreign_key: true
+  t.string :slot_name, null: false
+  t.references :item, foreign_key: true
+  t.boolean :equipped, default: true
+  t.timestamps
+
+  t.index [:character_id, :slot_name], unique: true
+end
+
+add_column :items, :armor_type, :string
+add_column :items, :base_ac, :integer
+add_column :items, :requires_proficiency, :boolean, default: false
+add_column :items, :stealth_disadvantage, :boolean, default: false
+add_column :items, :strength_requirement, :integer
+```
+
+### Item Enhancements
+```ruby
+# Add to existing items table
+armor_type: enum ['none', 'light', 'medium', 'heavy', 'shield']
+base_ac: integer (10-18 depending on armor)
+requires_proficiency: boolean
+stealth_disadvantage: boolean (heavy armor)
+strength_requirement: integer (heavy armor requirement)
+```
+
+---
+
+## Business Logic
+
+### AC Calculation Service
+```ruby
+class CharacterServices::ArmorClassCalculator
+  def initialize(character)
+    @character = character
+    @equipped_armor = character.equipped_item_in_slot('body')
+    @equipped_shield = character.equipped_item_in_slot('shield')
+  end
+
+  def calculate
+    base_ac = armor_base_ac
+    dex_bonus = dex_modifier_for_armor
+    shield_bonus = shield_ac_bonus
+    magic_bonus = magic_ac_bonuses
+
+    base_ac + dex_bonus + shield_bonus + magic_bonus
+  end
+
+  private
+
+  def armor_base_ac
+    return 10 unless @equipped_armor
+    @equipped_armor.base_ac || 10
+  end
+
+  def dex_modifier_for_armor
+    return @character.dexterity_modifier unless @equipped_armor
+
+    case @equipped_armor.armor_type
+    when 'light', 'none'
+      @character.dexterity_modifier
+    when 'medium'
+      [@character.dexterity_modifier, 2].min
+    when 'heavy'
+      0
+    else
+      @character.dexterity_modifier
+    end
+  end
+
+  def shield_ac_bonus
+    return 0 unless @equipped_shield
+    @equipped_shield.base_ac || 2
+  end
+
+  def magic_ac_bonuses
+    # Future: +1/+2/+3 magic armor bonuses
+    0
+  end
+end
+```
+
+---
+
+## API Design
+
+### Equip Item Tool
+```ruby
+{
+  tool: 'equip_item',
+  parameters: {
+    item_id: integer,
+    slot: string # auto-detect from item type if not provided
+  },
+  returns: {
+    success: boolean,
+    message: string,
+    new_ac: integer,
+    warnings: [
+      'No proficiency with this armor type',
+      'Strength requirement not met (STR 15 required)',
+      'Stealth checks have disadvantage while wearing'
+    ]
+  }
+}
+```
+
+### Unequip Item Tool
+```ruby
+{
+  tool: 'unequip_item',
+  parameters: {
+    slot: string
+  },
+  returns: {
+    success: boolean,
+    message: string,
+    new_ac: integer
+  }
+}
+```
+
+---
+
+## User Experience Flow
+
+### Scenario: Player Finds Leather Armor
+```
+DM: "You find a suit of leather armor in the chest."
+
+Player: "I put on the leather armor"
+→ AI DM calls equip_item tool
+→ Character AC updates from 12 to 13 (11 base + 2 DEX)
+→ DM: "You don the leather armor. Your AC increases to 13."
+
+Quick Actions: [Keep Old Armor] [Drop Old Armor] [Check Stats]
+```
+
+### Scenario: Heavy Armor Without Proficiency
+```
+Player: "I wear the plate armor"
+→ AI DM calls equip_item tool
+→ Warning: No proficiency detected
+→ DM: "You struggle with the plate armor. Without proficiency, you have disadvantage on all ability checks, saving throws, and attack rolls that use Strength or Dexterity. Your speed is reduced by 10 feet. Are you sure?"
+
+Quick Actions: [Yes, Wear It] [No, Keep Current Armor]
+```
+
+---
+
+## Testing Strategy
+
+### Unit Tests
+- `ArmorClassCalculator` with various armor combinations
+- Proficiency validation
+- Strength requirement checks
+- DEX modifier caps for medium/heavy armor
+
+### Integration Tests
+- Equipping armor updates AC in real-time
+- Side panel displays updated AC immediately
+- Room manager prevents equipment swaps during combat (hard lock)
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Data Layer (1-2 hours)
+- [ ] Create migration for equipment_slots table
+- [ ] Add armor columns to items table
+- [ ] Seed basic armor items
+- [ ] Add equipment_slot association to Character model
+
+### Phase 2: Business Logic (2-3 hours)
+- [ ] Create ArmorClassCalculator service
+- [ ] Add equip/unequip methods to Character model
+- [ ] Implement proficiency checks
+- [ ] Update calculated_armor_class method
+
+### Phase 3: Tool Integration (1-2 hours)
+- [ ] Add equip_item tool to ToolRegistry
+- [ ] Add unequip_item tool to ToolRegistry
+- [ ] Implement in ToolExecutor
+- [ ] Add suggestion context for found equipment
+
+### Phase 4: UI Updates (1 hour)
+- [ ] Display equipped items in character sheet side panel
+- [ ] Show AC breakdown (base + DEX + shield + magic)
+- [ ] Update AC in status bar immediately on equip
+
+---
+
+## Armor Proficiencies by Class
+
+```
+Fighter: All armor, shields
+Barbarian: Light, medium, shields
+Ranger: Light, medium, shields
+Paladin: All armor, shields
+Cleric: Light, medium, shields (some domains: heavy)
+Druid: Light, medium, shields (no metal)
+Rogue: Light
+Monk: None
+Wizard: None
+Sorcerer: None
+Warlock: Light
+Bard: Light
+```
+
+---
+
+## Edge Cases
+
+1. **Equipping armor without proficiency:** Allow but warn + apply penalties
+2. **Strength requirement not met:** Warn, reduce speed by 10 feet
+3. **Monk wearing armor:** Loses Unarmored Defense feature
+4. **Druid wearing metal:** Class restriction violation warning
+5. **Two-handed weapon + shield:** Prevent, requires free hand
+6. **Combat equipment swaps:** Action economy (full action to don/doff armor)
+
+---
+
+## Success Criteria
+
+- ✅ AC calculated correctly for all armor types
+- ✅ Proficiency warnings shown appropriately
+- ✅ Equipment changes update AC immediately
+- ✅ Character sheet shows equipped items
+- ✅ Tool approvals work for significant gear changes
+- ✅ Combat room prevents armor swaps (hard lock)

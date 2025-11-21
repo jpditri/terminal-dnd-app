@@ -1,0 +1,382 @@
+# Tab Completion System - MDSL Specification
+
+## Feature: Context-Aware Tab Completion for Terminal
+
+### Context
+Terminal UX requires tab completion for discoverability and speed. Players should be able to press TAB to:
+- Complete command names
+- Complete NPC names
+- Complete item names
+- Complete location names
+- Get contextual suggestions
+
+### Goals
+- Fast, responsive completion (< 50ms)
+- Context-aware suggestions based on current room
+- Fuzzy matching for typo tolerance
+- Cycle through multiple matches
+
+---
+
+## Completion Sources
+
+### Command Completion
+```
+/c[TAB] → /create, /character, /char
+/r[TAB] → /rest, /roll
+/i[TAB] → /inventory
+/m[TAB] → /map
+```
+
+### NPC Completion (in game rooms)
+```
+"talk to gr[TAB]" → "talk to Grag" (the bartender)
+"attack th[TAB]" → "attack the goblin", "attack the thug"
+```
+
+### Item Completion
+```
+"use po[TAB]" → "use potion of healing"
+"equip le[TAB]" → "equip leather armor"
+```
+
+### Location Completion
+```
+"go to ta[TAB]" → "go to tavern", "go to town square"
+```
+
+---
+
+## Architecture
+
+### Client-Side (JavaScript)
+```javascript
+class TabCompletionEngine {
+  constructor(terminalController) {
+    this.controller = terminalController
+    this.completionIndex = 0
+    this.lastInput = ''
+    this.matches = []
+  }
+
+  handleTab(event) {
+    event.preventDefault()
+
+    const input = this.controller.inputTarget.value
+    const cursorPos = this.controller.inputTarget.selectionStart
+
+    // New input, reset cycle
+    if (input !== this.lastInput) {
+      this.completionIndex = 0
+      this.matches = this.findMatches(input)
+    }
+
+    if (this.matches.length === 0) {
+      return // No matches
+    }
+
+    // Cycle through matches
+    const match = this.matches[this.completionIndex]
+    this.controller.inputTarget.value = match
+
+    this.completionIndex = (this.completionIndex + 1) % this.matches.length
+    this.lastInput = match
+  }
+
+  findMatches(input) {
+    if (input.startsWith('/')) {
+      return this.matchCommands(input.slice(1))
+    } else {
+      return this.matchContext(input)
+    }
+  }
+
+  matchCommands(partial) {
+    const commands = [
+      '/create', '/load', '/character', '/char',
+      '/roll', '/inventory', '/inv', '/map',
+      '/rest', '/save', '/quit', '/help',
+      '/back', '/goto'
+    ]
+
+    return commands
+      .filter(cmd => cmd.startsWith('/' + partial))
+      .sort()
+  }
+
+  matchContext(partial) {
+    // Match based on current room context
+    const room = this.controller.currentRoom
+    const contextMatches = []
+
+    // Add NPC names if in game room
+    if (this.inGameRoom(room)) {
+      contextMatches.push(...this.matchNPCs(partial))
+    }
+
+    // Add item names from inventory
+    contextMatches.push(...this.matchInventoryItems(partial))
+
+    // Add location names
+    contextMatches.push(...this.matchLocations(partial))
+
+    return this.fuzzyFilter(contextMatches, partial)
+  }
+
+  fuzzyFilter(items, partial) {
+    const lower = partial.toLowerCase()
+    return items
+      .filter(item => item.toLowerCase().includes(lower))
+      .sort((a, b) => {
+        // Prioritize starts-with matches
+        const aStarts = a.toLowerCase().startsWith(lower)
+        const bStarts = b.toLowerCase().startsWith(lower)
+        if (aStarts && !bStarts) return -1
+        if (!aStarts && bStarts) return 1
+        return a.localeCompare(b)
+      })
+  }
+}
+```
+
+---
+
+## Server-Side Context API
+
+### New Channel Method: get_completion_context
+```ruby
+def get_completion_context(data)
+  partial = data['partial']
+  cursor_pos = data['cursor_pos']
+
+  context = {
+    commands: available_commands,
+    npcs: nearby_npcs,
+    items: character_inventory_items,
+    locations: known_locations
+  }
+
+  transmit({
+    type: 'completion_context',
+    context: context,
+    timestamp: Time.current.iso8601
+  })
+end
+
+private
+
+def available_commands
+  base = %w[create load character char roll inventory inv map rest save quit help back goto]
+
+  # Add room-specific commands
+  case @session.current_room
+  when 'combat'
+    base + %w[attack defend dodge cast]
+  when 'lobby'
+    base + %w[browse list]
+  else
+    base
+  end
+end
+
+def nearby_npcs
+  return [] unless @session.character
+
+  # Get NPCs in current location/room
+  NpcInteraction
+    .joins(:npc)
+    .where(character: @session.character)
+    .where('created_at > ?', 1.hour.ago)
+    .pluck('npcs.name')
+    .uniq
+end
+
+def character_inventory_items
+  return [] unless @session.character
+
+  @session.character
+    .character_inventories
+    .joins(:item)
+    .pluck('items.name')
+end
+
+def known_locations
+  # Return locations the character has visited
+  Location.where(campaign: @session.campaign).pluck(:name)
+end
+```
+
+---
+
+## UX Behavior
+
+### Single Match
+```
+Input: /cr[TAB]
+→ Auto-completes to: /create
+```
+
+### Multiple Matches - Cycle
+```
+Input: /c[TAB]
+→ Shows: /create
+
+[TAB again]
+→ Shows: /character
+
+[TAB again]
+→ Shows: /char
+
+[TAB again]
+→ Cycles back to: /create
+```
+
+### No Matches
+```
+Input: /xyz[TAB]
+→ No change, possibly beep or visual indication
+```
+
+### Fuzzy Matching
+```
+Input: "talk to bartnd[TAB]"
+→ Matches "bartender" even with typo
+→ Completes to: "talk to bartender"
+```
+
+---
+
+## Visual Feedback
+
+### Completion Hints (Optional Enhancement)
+Show available completions below input:
+```
+> /c█
+  /create  /character  /char
+```
+
+### Inline Suggestion (GitHub Copilot style)
+```
+> /cr█eate
+     ^^^^^ (grayed out suggestion)
+→ Press TAB to accept
+→ Press RIGHT ARROW to accept
+```
+
+---
+
+## Implementation Checklist
+
+### Phase 1: Basic Command Completion (1-2 hours)
+- [ ] Add TAB key handler in terminal_controller.js
+- [ ] Implement command matching algorithm
+- [ ] Add cycle-through-matches logic
+- [ ] Visual feedback (subtle highlight or indication)
+
+### Phase 2: Context-Aware Completion (2-3 hours)
+- [ ] Create completion context API in channel
+- [ ] Fetch NPC names from recent interactions
+- [ ] Fetch item names from inventory
+- [ ] Implement fuzzy matching algorithm
+
+### Phase 3: Visual Enhancements (1 hour)
+- [ ] Show completion hints below input (optional)
+- [ ] Inline grayed-out suggestions (optional)
+- [ ] Sound/visual feedback for no matches
+
+---
+
+## Performance Considerations
+
+### Client-Side Caching
+```javascript
+class CompletionCache {
+  constructor(ttl = 60000) { // 60 second cache
+    this.cache = new Map()
+    this.ttl = ttl
+  }
+
+  get(key) {
+    const entry = this.cache.get(key)
+    if (!entry) return null
+
+    if (Date.now() - entry.timestamp > this.ttl) {
+      this.cache.delete(key)
+      return null
+    }
+
+    return entry.value
+  }
+
+  set(key, value) {
+    this.cache.set(key, {
+      value,
+      timestamp: Date.now()
+    })
+  }
+}
+```
+
+### Lazy Loading
+- Fetch completion context only when first TAB is pressed
+- Cache results for current room
+- Invalidate cache on room change
+
+---
+
+## Edge Cases
+
+1. **Empty input + TAB:** Show all available commands
+2. **Ambiguous partial:** Cycle through all matches
+3. **Exact match + TAB:** Cycle to next match (not stay on same)
+4. **Mid-string TAB:** Complete from cursor position
+5. **Multiple words:** Complete only the current word/token
+
+---
+
+## Testing Strategy
+
+### Unit Tests
+```javascript
+describe('TabCompletionEngine', () => {
+  it('completes slash commands', () => {
+    expect(engine.matchCommands('cr')).toEqual(['/create', '/char'])
+  })
+
+  it('cycles through matches', () => {
+    expect(engine.handleTab('/c')).toEqual('/create')
+    expect(engine.handleTab('/c')).toEqual('/character')
+    expect(engine.handleTab('/c')).toEqual('/char')
+    expect(engine.handleTab('/c')).toEqual('/create') // cycles
+  })
+
+  it('fuzzy matches NPC names', () => {
+    expect(engine.matchNPCs('grag')).toContain('Grag the Bartender')
+  })
+})
+```
+
+### Integration Tests
+```ruby
+describe 'Tab Completion', type: :system do
+  it 'completes command names' do
+    visit terminal_session_path(session)
+
+    fill_in 'input', with: '/cr'
+    find('input').native.send_keys(:tab)
+
+    expect(find('input').value).to eq('/create')
+  end
+end
+```
+
+---
+
+## Success Criteria
+
+- ✅ All slash commands can be tab-completed
+- ✅ TAB cycles through multiple matches
+- ✅ Fuzzy matching works for typos
+- ✅ Response time < 50ms for local matches
+- ✅ Context updates when room changes
+- ✅ Works with command history (up/down arrows don't break it)
